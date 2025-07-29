@@ -1,0 +1,6 @@
+Patient Name: John Doe
+SSN: 123-45-6789
+Diagnosis: Hypertension
+DOB: 05/14/1972
+Phone: (555) 123-4567
+Email: johndoe@example.com

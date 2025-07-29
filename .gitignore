@@ -1,0 +1,8 @@
+# Ignore Terraform state and cache
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.log
+*.zip
+*.gz
+*.exe
