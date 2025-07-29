@@ -1,4 +1,3 @@
-# Ignore Terraform state and cache
 .terraform/
 *.tfstate
 *.tfstate.backup
