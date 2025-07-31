@@ -6,6 +6,10 @@ This document outlines the step-by-step process used to build a secure, multi-ac
 
 ## Phase 1 – AWS Organization Setup
 
+Establish a secure AWS Organization with workload isolation, Terraform-ready IAM roles, and cross-account access for centralized provisioning.
+
+---
+
 ### 1. AWS Organization Creation
 
 - Created new AWS Organization from the Management Account (ID: `885812045783`)
@@ -151,6 +155,10 @@ terraform apply
 
 ## Phase 2 – Security & Compliance Foundation
 
+This phase focuses on implementing security guardrails, compliance monitoring, and centralized visibility across your multi-account HIPAA-compliant AWS Landing Zone.
+
+---
+
 ### 1. Service Control Policies (SCPs)
 SCPs were defined and attached to Organizational Units (OUs) from the Management account to enforce guardrails, even for Admin users in child accounts.
 [Policies](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/policies)
@@ -200,7 +208,7 @@ Enabled AWS Config in all accounts.
 
 - Centralized all config logs into:
 #### aws-config-security-292725948066 (bucket name)
-NOTE: we created this bucket during the set up of AWS config.
+> NOTE: we created this bucket during the set up of AWS config.
 We need to aggregate AWS Config logs from all accounts into the bucket we just created for AWS config. Bukcet policy we used for AWS config bucket: [Buckey Policy](https://github.com/k4sth4/hipaa-landing-zone/blob/main/terraform/policies/aws-config%20bucket%20policy.json)
 
 ### 4. GuardDuty Setup
@@ -254,5 +262,83 @@ aws inspector2 enable-delegated-admin-account --delegated-admin-account-id 29272
 
 <br><img width="629" height="213" alt="image" src="https://github.com/user-attachments/assets/c5f6fa79-f127-499a-b209-86de5a9fb101" /><br>
 
-Note: Inspector findings do not appear in a centralized view in the console, but can be queried via CLI from the Security account.
+> Note: Inspector findings do not appear in a centralized view in the console, but can be queried via CLI from the Security account.
 
+## Phase 3: Networking & Shared Services
+
+This phase sets up a centralized VPC in the **Shared Services account** and shares it with **Dev** and **Prod** accounts using AWS Resource Access Manager (RAM). This ensures centralized control, cost-efficiency, and consistency across environments.
+
+---
+
+### Step 1: Deploy Centralized VPC (Shared Account)
+
+We created a centralized VPC using Terraform in the `org-shared` account:
+
+- **VPC ID**: `vpc-0e367aa98ffa1c450`
+- **CIDR**: `10.0.0.0/16`
+
+> 🛑 Note: Temporarily detached `DenyAllIfNoMFA` SCP to allow provisioning.
+
+Create Public/Private Subnets, NAT Gateway, Route Tables
+
+Public Subnets
+    AZ	   |  CIDR Block	  | Subnet ID	Auto-Assign Public IP
+-----------|----------------|-----------------------------------
+us-east-1a |	10.0.1.0/24	  |  subnet-0fce8f4881e8ea76c	
+us-east-1b |	10.0.2.0/24	  |  subnet-0a7f391c6bbab0057	
+
+Private Subnets
+   AZ	     |  CIDR Block	  | Subnet ID	NAT Access
+-----------|----------------|------------------------
+us-east-1a | 10.0.101.0/24	| subnet-0a114eaf6b3ed7dc8	
+us-east-1b |	10.0.102.0/24	| subnet-0e28ff99ce75fbd7a	
+
+Terraform structure and code: module [vpc](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/modules/vpc) and [shared account](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/environments/shared): 
+
+<br><img width="222" height="264" alt="image" src="https://github.com/user-attachments/assets/eabc3065-546d-413c-a3de-04a0837d046f" /><br>
+
+<br><img width="366" height="384" alt="image" src="https://github.com/user-attachments/assets/41884196-a080-4142-93b3-f7fcb5b8a160" /><br>
+
+<br><img width="585" height="310" alt="image" src="https://github.com/user-attachments/assets/27e5116d-157a-44ad-8c88-5628dcd235a8" /><br>
+
+```markdown
+terraform init
+```
+
+<br><img width="580" height="420" alt="image" src="https://github.com/user-attachments/assets/36d624db-824f-41c6-b71e-eda79ad7d3ad" /><br>
+
+```markdown
+terraform plan
+```
+
+<br><img width="639" height="690" alt="image" src="https://github.com/user-attachments/assets/929af51d-a9de-4962-84bb-0566667ee396" /><br>
+
+```markdown
+terraform apply
+```
+
+<br><img width="644" height="572" alt="image" src="https://github.com/user-attachments/assets/cddecce3-71fe-4fc6-b867-add518c92dbd" /><br>
+
+- NAT Gateway created with an Elastic IP
+- Route tables created and associated per subnet type
+
+### Step 2: Share Subnets using RAM (Dev/Prod)
+- Enabled "Sharing with AWS Organization" in the RAM settings
+
+<br><img width="585" height="151" alt="image" src="https://github.com/user-attachments/assets/fd77179c-67ab-4497-81cd-6250d8a6d47f" /><br>
+
+- Shared private subnets with Dev and Prod accounts
+
+Terraform structure and code: module [vpc-sharing](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/modules/vpc-sharing)
+
+- Use `terraform apply` to apply chnages.
+
+<br><img width="699" height="349" alt="image" src="https://github.com/user-attachments/assets/34d1d15c-cff2-44c5-9569-fde09d7cdbff" /><br>
+
+#### Summary:
+In Phase 3, we designed and deployed a centralized networking architecture to ensure consistent, secure, and cost-efficient infrastructure across all accounts:
+- Created a central VPC in the Shared Services account to avoid duplicating networking components in each workload account.
+- Provisioned public and private subnets across two Availability Zones for high availability.
+- Deployed a NAT Gateway to enable secure internet access for private subnets.
+- Used AWS Resource Access Manager (RAM) to share private subnets with Dev and Prod accounts—enabling them to launch resources into centrally managed networking components.
+- Ensured isolation between public and private traffic and removed unnecessary SCP restrictions during provisioning.
