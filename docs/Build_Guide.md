@@ -342,3 +342,267 @@ In Phase 3, we designed and deployed a centralized networking architecture to en
 - Deployed a NAT Gateway to enable secure internet access for private subnets.
 - Used AWS Resource Access Manager (RAM) to share private subnets with Dev and Prod accounts—enabling them to launch resources into centrally managed networking components.
 - Ensured isolation between public and private traffic and removed unnecessary SCP restrictions during provisioning.
+
+## Phase 4: Identity & Access
+
+This phase focuses on securing access and enforcing least privilege across AWS accounts using IAM roles, Access Analyzer, and IAM Identity Center (SSO).
+
+---
+
+### Step 1: Create IAM Roles & Policies for Least Privilege Access
+
+We created granular IAM roles in each account to follow the principle of least privilege:
+
+Role Name	  | Account	| Purpose
+----------- |---------|-----------------------------------------
+DevAppRole  |	Dev	    | Used by developers in Dev account
+ProdOpsRole |	Prod	  | Used by operators in Prod account
+AuditRole	  | Security|	Assumed by auditors for read-only access
+
+- Roles are assumed cross-account using a trust policy.
+- Roles use custom inline policies referencing specific ARNs.
+- All roles and policies were deployed using Terraform for consistency.
+
+Terraform structure and code: module [iam](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/modules/iam)  [dev](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/environments/dev) [prod](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/environments/prod)
+
+<br><img width="560" height="431" alt="image" src="https://github.com/user-attachments/assets/0cf60154-5bd1-478b-9af8-b48602708877" /><br>
+
+Apply terraform for both Dev and Prod.
+
+<br><img width="483" height="452" alt="image" src="https://github.com/user-attachments/assets/4def5794-6d30-42f5-add3-f1994bc4e293" /><br>
+
+<br><img width="510" height="123" alt="image" src="https://github.com/user-attachments/assets/8e2e2599-685f-47eb-8d7b-1f8a1c0d12ad" /><br>
+
+<br><img width="552" height="333" alt="image" src="https://github.com/user-attachments/assets/abc205d5-7a2c-4eb0-9fe1-1410f124dccc" /><br>
+
+<br><img width="565" height="164" alt="image" src="https://github.com/user-attachments/assets/576e738b-646c-4d85-9862-8dd6e6a9c4e1" /><br>
+
+### Step 2: IAM Access Analyzer (Org-level + Local)
+##### Purpose: Detects unintended access, public buckets, or cross-account permissions.
+
+#### Actions Taken:
+Task  | 	Description
+------|------------------------------------------------------------------------------
+Local | Analyzers	Deployed in Dev, Prod, and Shared accounts
+Org   | Analyzer	Deployed in Security account to monitor the entire AWS Organization
+
+#### Pre-Configuration Fixes:
+- Set up provider.tf in each environment directory (Dev/Prod/Security)
+- Fixed module input issues (e.g., analyzer_name was not passed)
+- Removed invalid depends_on references
+
+#### Requirements:
+- Delegated Security account as Access Analyzer admin
+- Created service-linked role in Management account
+
+```makrdown
+aws iam create-service-linked-role --aws-service-name access-analyzer.amazonaws.com
+```
+
+<br><img width="579" height="271" alt="image" src="https://github.com/user-attachments/assets/07a6b1c9-fba8-4731-a9e5-90665acf0463" /><br>
+
+<br><img width="644" height="88" alt="image" src="https://github.com/user-attachments/assets/de6c6ad5-dc7c-4a17-a580-e067a6c66a13" /><br>
+
+Terraform structure and code: access-analyzer.tf for each [environment](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/environments)
+
+Set up IAM Access Analyzer in each account including shared account.
+
+<br><img width="484" height="268" alt="image" src="https://github.com/user-attachments/assets/103d075f-afcd-4339-8a54-2902b945e852" /><br>
+
+After `terraform init` use `terraform apply` for each account, security, dev, prod and shared inside their respective directories.
+
+<br><img width="568" height="471" alt="image" src="https://github.com/user-attachments/assets/338a23e2-8a94-4347-9a0d-591a739676dc" /><br>
+
+<br><img width="603" height="461" alt="image" src="https://github.com/user-attachments/assets/eb16370f-523e-4c7e-b2df-d6358ca834b4" /><br>
+
+- Delegated Security account as admin for Access Analyzer.
+- Created the required Service-Linked Role in the Management account.
+- Deployed Org-level Access Analyzer in the Security account.
+- Deployed local analyzers in Dev, Prod, and Shared
+
+### Step 3: Deploy IAM Identity Center (SSO)
+#### Goal: Enable secure, centralized, role-based access without legacy IAM use
+
+First, we need to enable SSO using console in us-east-1 region.
+
+<br><img width="975" height="93" alt="image" src="https://github.com/user-attachments/assets/7598a392-fb48-4a5c-bbdf-f4cfcd2ad063" /><br>
+
+Terraform structure and code: [identity-center](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/environments/identity-center)
+
+Apply Terraform
+
+<br><img width="662" height="350" alt="image" src="https://github.com/user-attachments/assets/2fa3023c-13b7-45eb-b050-87fca41a6a66" /><br>
+
+Users are visible now.
+
+<br><img width="785" height="190" alt="image" src="https://github.com/user-attachments/assets/9c31a7b6-c07c-4e98-af35-6aef4761a3be" /><br>
+
+#### What We Implemented via Terraform
+Component                           |	Description
+------------------------------------|--------------------------------------------------------------------------------------
+Enabled IAM Identity Center	        | Set up in us-east-1 region with AWS-managed identity store
+Created 2 users (devuser, produser)	| These represent developers/operators logging into the AWS portal
+Created 2 permission sets           |	DevAppAccess, ProdOpsAccess – each maps to an IAM role
+Attached AssumeRole inline policies	| Let each user assume their respective cross-account IAM role (DevAppRole, ProdOpsRole)
+Assigned users to AWS accounts      | Users were assigned to Dev and Prod accounts with access to the specific roles
+
+## Phase 5: HIPAA Enhancements
+
+This phase implements additional safeguards aligned with HIPAA requirements, focusing on encryption, audit logging protection, and compliance automation.
+
+---
+
+### Step 1: KMS Customer Managed Keys (CMKs)
+
+Purpose: Ensure encryption at rest for all sensitive services—S3, RDS, and EBS—using auditable, controllable keys.
+
+Actions Taken:
+Created KMS CMK in the Security account for:
+
+- S3 (CloudTrail logs)
+- RDS & EBS volumes
+
+<br><img width="749" height="202" alt="image" src="https://github.com/user-attachments/assets/15402896-bc78-4268-aee8-d01b65ba167f" /><br>
+
+<br><img width="760" height="228" alt="image" src="https://github.com/user-attachments/assets/93cb7e21-925d-400a-925c-232eb04ea221" /><br>
+
+<br><img width="760" height="344" alt="image" src="https://github.com/user-attachments/assets/9ef3e577-5b4f-4968-8055-81f7f4421606" /><br>
+
+- Updated CloudTrail S3 bucket to use SSE-KMS
+
+<br><img width="762" height="234" alt="image" src="https://github.com/user-attachments/assets/f5542002-81ab-42de-9c56-09090fa81cac" /><br>
+
+#### Create One Multi-Use KMS CMK
+- Alias: alias/hipaa-data-key
+- Region: us-east-1
+- Purpose: Encrypt both RDS and EBS volumes across Dev and Prod
+
+<br><img width="824" height="280" alt="image" src="https://github.com/user-attachments/assets/91785bb3-3d9f-4f99-ae67-db9aeb40ba7c" /><br>
+
+Applied necessary key policies to allow CloudTrail and cross-account access
+
+> NOTE: This ensures HIPAA-compliant encryption and centralized control of key usage and access logs.
+
+### Step 2: Custom AWS Config Rule (EBS Encryption Checker)
+
+#### Goal: Detect unencrypted EBS volumes across Dev/Prod/Security accounts.
+
+#### Create a Lambda function to perform checks for unencrypted EBS volumes. 
+
+Python script: ebs_encryption_checker.py
+```markdown
+import boto3 
+import json
+
+def lambda_handler(event, context):
+    invoking_event = json.loads(event['invokingEvent'])
+    configuration_item = invoking_event['configurationItem']
+    compliance_type = 'NON_COMPLIANT'
+
+    if configuration_item['resourceType'] == 'AWS::EC2::Volume':
+        if configuration_item['configuration'].get('encrypted') is True:
+            compliance_type = 'COMPLIANT'
+
+    config = boto3.client('config')
+    config.put_evaluations(
+        Evaluations=[
+            {
+                'ComplianceResourceType': configuration_item['resourceType'],
+                'ComplianceResourceId': configuration_item['resourceId'],
+                'ComplianceType': compliance_type,
+                'OrderingTimestamp': configuration_item['configurationItemCaptureTime']
+            }
+        ],
+        ResultToken=event['resultToken']
+    )
+```
+
+- First, we create a Lambda function.
+
+<br><img width="710" height="216" alt="image" src="https://github.com/user-attachments/assets/bb950810-1887-4e2e-8277-e0d4065c09b1" /><br>
+
+- Have the python code stored in lambda_function.zip file.
+
+<br><img width="975" height="57" alt="image" src="https://github.com/user-attachments/assets/df040c4f-cd11-4d4b-8b90-92263d15c82d" /><br>
+
+<br><img width="975" height="85" alt="image" src="https://github.com/user-attachments/assets/5094c458-28f8-44a7-a660-fff4f148769e" /><br>
+
+- Create a Lambda function.
+
+<br><img width="684" height="443" alt="image" src="https://github.com/user-attachments/assets/c4a5cf42-b72d-4dd8-85c0-281188065d67" /><br>
+
+<br><img width="705" height="424" alt="image" src="https://github.com/user-attachments/assets/1dbaf7a7-3384-4496-aff9-e083605efbec" /><br>
+
+<br><img width="751" height="308" alt="image" src="https://github.com/user-attachments/assets/956bd176-b508-47d1-ac29-344fcda26b62" /><br>
+
+You can first test the logic using test events.
+- Choose "Create new test event"
+- Name it something like: ebs-test-event
+
+Paste this sample test event payload (mocking a non-encrypted EBS volume):
+
+```markdown
+{
+  "invokingEvent": "{\"configurationItem\": {\"resourceType\": \"AWS::EC2::Volume\", \"resourceId\": \"vol-0abc123456789def0\", \"configuration\": {\"encrypted\": false}, \"configurationItemCaptureTime\": \"2023-07-09T00:00:00Z\"}}",
+  "resultToken": "test-token"
+}
+```
+
+<br><img width="860" height="464" alt="image" src="https://github.com/user-attachments/assets/fb0f022e-23be-42ca-ada7-9adae692c7fe" /><br>
+
+Upload the code using zip file.
+
+<br><img width="815" height="463" alt="image" src="https://github.com/user-attachments/assets/eb4e7fa6-970a-4620-889a-14cf5a268b7e" /><br>
+
+Now change the Handler name.
+
+<br><img width="739" height="366" alt="image" src="https://github.com/user-attachments/assets/bce15d4b-3e79-45b8-8c0f-36b0007dcab8" /><br>
+
+Now you can hit Deploy (blue button) to apply the changes.
+
+<br><img width="794" height="146" alt="image" src="https://github.com/user-attachments/assets/3d39b4e6-36c6-4daf-9818-38c80adda39e" /><br>
+
+Lambda execution role (EBSConfigLambdaExecRole) already has full AWS Config permissions.
+
+<br><img width="814" height="436" alt="image" src="https://github.com/user-attachments/assets/8ffeea95-5393-4135-a554-33a71a175188" /><br>
+
+Now the only remaining permission is allowing AWS Config to invoke the Lambda function itself, which is not controlled by the execution role — it's a resource-based policy on the Lambda function.
+
+We add permissions to create a resource policy.
+
+<br><img width="743" height="183" alt="image" src="https://github.com/user-attachments/assets/3342f1c4-739d-408c-aa7b-c70f3e5ddfa9" /><br>
+
+<br><img width="750" height="413" alt="image" src="https://github.com/user-attachments/assets/46fd525a-5802-4086-ac1c-b06a6e8104a6" /><br>
+
+#### Create AWS Config Custom Rule
+
+<br><img width="811" height="336" alt="image" src="https://github.com/user-attachments/assets/beee9ad5-27d9-41bb-9afb-c22b64b9d20a" /><br>
+
+<br><img width="764" height="479" alt="image" src="https://github.com/user-attachments/assets/f6e990db-e610-4659-82c6-04d71af2dcc9" /><br>
+
+<br><img width="790" height="440" alt="image" src="https://github.com/user-attachments/assets/8757dca8-8b5c-44aa-b058-bbb105aad7b5" /><br>
+
+<br><img width="814" height="88" alt="image" src="https://github.com/user-attachments/assets/b2f8d24a-d92d-48c0-926a-088f34556f92" /><br>
+
+ebs-volume-encryption-required
+- Custom AWS Config Rule (via your Lambda)
+- Checks each individual EBS volume to ensure it's encrypted
+- Evaluates compliance on a resource-by-resource basis (not just global settings)
+
+> To enforce EBS encryption, a custom AWS Config rule is deployed across Dev, Prod, and Security accounts. For demonstration, one environment’s implementation is shown — others follow the same pattern.”
+“Since Config rules are regional and per-account, I deployed the same rule across accounts to ensure full coverage. For cost and simplicity, I’ve demoed it in one environment.”
+
+## Phase 6: Advanced Add-ons
+
+In this final phase, we enhanced the detection and compliance capabilities of the HIPAA-compliant AWS Landing Zone using simulated findings, PHI detection, and optional alerting integrations.
+
+---
+
+### Step 1: Simulate Security Findings in GuardDuty & Security Hub
+
+**Purpose:** Validate centralized detection and triage pipeline using sample threats.
+
+- **GuardDuty** is centralized in the Security account with Dev and Prod accounts as members.
+- **Simulated findings** are safe, non-malicious, and ideal for testing alert pipelines.
+
+**Run in Security Account (Delegated Admin):**
