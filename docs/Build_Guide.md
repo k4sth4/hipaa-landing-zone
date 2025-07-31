@@ -148,3 +148,111 @@ terraform apply
 ```
 
 <br><img width="539" height="438" alt="image" src="https://github.com/user-attachments/assets/960dfe53-d8ce-4793-aee8-b3de6c54a112" /><br>
+
+## Phase 2 – Security & Compliance Foundation
+
+### 1. Service Control Policies (SCPs)
+SCPs were defined and attached to Organizational Units (OUs) from the Management account to enforce guardrails, even for Admin users in child accounts.
+[Policies](https://github.com/k4sth4/hipaa-landing-zone/tree/main/terraform/policies)
+- DenyRootUserAccess — Prevents use of the root user in all member accounts.
+- DenyUnsupportedRegions — Restricts services to us-east-1 only.
+- EnforceMFA — Ensures IAM users must use MFA.
+
+Attached to: Security, Dev, Prod, Shared OUs. 
+
+<br><img width="975" height="455" alt="image" src="https://github.com/user-attachments/assets/9d896c2b-99cf-4004-b437-2ddf95096c14" /><br>
+
+### 2. Centralized CloudTrail Logging
+From the Management account, we delegated CloudTrail admin to the Security account.
+
+```markdown
+aws organizations enable-aws-service-access --service-principal cloudtrail.amazonaws.com --profile mgmt
+aws organizations register-delegated-administrator --account-id 292725948066 --service-principal cloudtrail.amazonaws.com --profile mgmt
+aws iam create-service-linked-role --aws-service-name cloudtrail.amazonaws.com --profile mgmt
+```
+<br><img width="614" height="36" alt="image" src="https://github.com/user-attachments/assets/1d5f1bf1-44ed-4434-9480-9644b461e3af" /><br> 
+<br><img width="574" height="293" alt="image" src="https://github.com/user-attachments/assets/7bfba69e-8516-42a8-8b07-9122d5711f6b" /><br>
+
+In the Security account:
+- Created a secure S3 bucket with Object Lock (WORM) + Versioning.
+
+<br><img width="623" height="154" alt="image" src="https://github.com/user-attachments/assets/f2f5bcc8-c4b4-4c21-b110-3691d9b8e21c" /><br>
+
+<br><img width="633" height="233" alt="image" src="https://github.com/user-attachments/assets/ddd61e3e-054b-415a-a526-322b42b547cf" /><br>
+
+- Attach S3 [Bucket Policy](https://github.com/k4sth4/hipaa-landing-zone/blob/main/terraform/policies/org-cloudtrail-logs-security%20bucket%20policy.json) to Allow CloudTrail Access from All Accounts in Org.
+
+- Applied 7-day retention (configurable for HIPAA).
+
+<br><img width="621" height="369" alt="image" src="https://github.com/user-attachments/assets/05a789a1-80a8-41e4-a69a-270f742e8caa" /><br>
+
+- Created org-level trail storing logs from all accounts.
+  
+<br><img width="722" height="373" alt="image" src="https://github.com/user-attachments/assets/b3e7b341-4b6b-465f-a587-a0381913aa86" /><br>
+
+### 3. AWS Config + HIPAA Conformance Packs
+Enabled AWS Config in all accounts.
+- From the console, deployed HIPAA Security Operational Best Practices conformance pack in each account.
+
+<br><img width="625" height="284" alt="image" src="https://github.com/user-attachments/assets/1457158f-f9b6-4475-a022-c2e31c640597" /><br>
+
+<br><img width="626" height="245" alt="image" src="https://github.com/user-attachments/assets/49df9a9b-dc3f-4aad-b7d0-6a7fd655d86d" /><br>
+
+- Centralized all config logs into:
+#### aws-config-security-292725948066 (bucket name)
+NOTE: we created this bucket during the set up of AWS config.
+We need to aggregate AWS Config logs from all accounts into the bucket we just created for AWS config. Bukcet policy we used for AWS config bucket: [Buckey Policy](https://github.com/k4sth4/hipaa-landing-zone/blob/main/terraform/policies/aws-config%20bucket%20policy.json)
+
+### 4. GuardDuty Setup
+Enabled GuardDuty in Management, Security, Shared, Dev, and Prod accounts.
+From the Management account:
+
+```markdown
+aws organizations enable-aws-service-access --service-principal guardduty.amazonaws.com
+aws guardduty enable-organization-admin-account --admin-account-id 292725948066
+```
+
+From the Security account:
+```markdown
+aws guardduty create-detector --enable
+```
+
+<br><img width="656" height="360" alt="image" src="https://github.com/user-attachments/assets/17611d47-bbce-47a6-b517-1677e5795ef5" /><br>
+
+<br><img width="646" height="602" alt="image" src="https://github.com/user-attachments/assets/67f0e1d5-e2dc-42f5-b223-7da837e9d565" /><br>
+
+<br><img width="659" height="356" alt="image" src="https://github.com/user-attachments/assets/428a7010-53be-4ee8-bff0-df875807a9b2" /><br>
+
+All findings from member accounts are now aggregated into the Security account.
+
+### 5. Security Hub + Inspector
+#### Security Hub
+- Enabled in Dev & Prod.
+- Delegated 292725948066 (Security account) as Security Hub admin.
+- Invitations sent and accepted from Security account to Dev & Prod.
+- Aggregated findings in Security account.
+
+<br><img width="563" height="406" alt="image" src="https://github.com/user-attachments/assets/0a439b9b-0ca3-43f8-aa82-0bcb17776aea" /><br>
+
+<br><img width="601" height="293" alt="image" src="https://github.com/user-attachments/assets/59046748-f308-4887-b866-6215b9fcdb6e" /><br>
+
+Validation:
+```markdown
+aws securityhub list-organization-admin-accounts --region us-east-1
+```
+
+<br><img width="607" height="401" alt="image" src="https://github.com/user-attachments/assets/7a60e464-f595-4323-b40f-ea18c77e4dbe" /><br>
+
+#### Amazon Inspector
+- Enabled in Dev & Prod.
+- Delegated admin assigned:
+```markdown
+aws inspector2 enable-delegated-admin-account --delegated-admin-account-id 292725948066
+```
+
+<br><img width="648" height="221" alt="image" src="https://github.com/user-attachments/assets/fb84f990-980c-44b3-acfe-e628db368676" /><br>
+
+<br><img width="629" height="213" alt="image" src="https://github.com/user-attachments/assets/c5f6fa79-f127-499a-b209-86de5a9fb101" /><br>
+
+Note: Inspector findings do not appear in a centralized view in the console, but can be queried via CLI from the Security account.
+
