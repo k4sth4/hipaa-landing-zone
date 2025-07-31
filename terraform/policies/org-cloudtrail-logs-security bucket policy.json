@@ -1,0 +1,81 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowCloudTrailPutObjectAllAccounts",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": [
+                "arn:aws:s3:::org-cloudtrail-logs-security/AWSLogs/885812045783/*",
+                "arn:aws:s3:::org-cloudtrail-logs-security/AWSLogs/292725948066/*",
+                "arn:aws:s3:::org-cloudtrail-logs-security/AWSLogs/749717458225/*",
+                "arn:aws:s3:::org-cloudtrail-logs-security/AWSLogs/088044431771/*",
+                "arn:aws:s3:::org-cloudtrail-logs-security/AWSLogs/674845782471/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+        {
+            "Sid": "AllowGetBucketAclForTrail",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": [
+                "s3:GetBucketAcl",
+                "s3:ListBucket"
+            ],
+            "Resource": "arn:aws:s3:::org-cloudtrail-logs-security"
+        },
+        {
+            "Sid": "AWSCloudTrailAclCheck20150319-0a5a4154-5fdf-45c1-9a5d-a46abf80ba5e",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::org-cloudtrail-logs-security",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceArn": "arn:aws:cloudtrail:us-east-1:885812045783:trail/org-trail"
+                }
+            }
+        },
+        {
+            "Sid": "AWSCloudTrailWrite20150319-4e9b0f8d-9553-4804-bc4b-11983dea2b6e",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::org-cloudtrail-logs-security/AWSLogs/292725948066/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control",
+                    "AWS:SourceArn": "arn:aws:cloudtrail:us-east-1:885812045783:trail/org-trail"
+                }
+            }
+        },
+        {
+            "Sid": "AWSCloudTrailWrite20150319-8c743655-e040-4fa7-b3a8-0f77b432d7e9",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::org-cloudtrail-logs-security/AWSLogs/o-sk6jpndkg1/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control",
+                    "AWS:SourceArn": "arn:aws:cloudtrail:us-east-1:885812045783:trail/org-trail"
+                }
+            }
+        }
+    ]
+}
