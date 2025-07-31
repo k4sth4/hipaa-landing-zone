@@ -490,7 +490,7 @@ Applied necessary key policies to allow CloudTrail and cross-account access
 
 #### Create a Lambda function to perform checks for unencrypted EBS volumes. 
 
-Python script: ebs_encryption_checker.py
+Python script: `ebs_encryption_checker.py`
 ```markdown
 import boto3 
 import json
