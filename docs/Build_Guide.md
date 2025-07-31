@@ -14,7 +14,8 @@ Establish a secure AWS Organization with workload isolation, Terraform-ready IAM
 
 - Created new AWS Organization from the Management Account (ID: `885812045783`)
 - Organizational Units (OUs) created:
-  - `Security`
+
+   - `Security`
   - `SharedServices`
   - `Dev`
   - `Prod`
@@ -207,7 +208,7 @@ Enabled AWS Config in all accounts.
 <br><img width="626" height="245" alt="image" src="https://github.com/user-attachments/assets/49df9a9b-dc3f-4aad-b7d0-6a7fd655d86d" /><br>
 
 - Centralized all config logs into:
-#### aws-config-security-292725948066 (bucket name)
+**aws-config-security-292725948066** (bucket name)
 > NOTE: we created this bucket during the set up of AWS config.
 We need to aggregate AWS Config logs from all accounts into the bucket we just created for AWS config. Bukcet policy we used for AWS config bucket: [Buckey Policy](https://github.com/k4sth4/hipaa-landing-zone/blob/main/terraform/policies/aws-config%20bucket%20policy.json)
 
@@ -234,7 +235,7 @@ aws guardduty create-detector --enable
 All findings from member accounts are now aggregated into the Security account.
 
 ### 5. Security Hub + Inspector
-#### Security Hub
+**Security Hub**
 - Enabled in Dev & Prod.
 - Delegated 292725948066 (Security account) as Security Hub admin.
 - Invitations sent and accepted from Security account to Dev & Prod.
@@ -251,7 +252,7 @@ aws securityhub list-organization-admin-accounts --region us-east-1
 
 <br><img width="607" height="401" alt="image" src="https://github.com/user-attachments/assets/7a60e464-f595-4323-b40f-ea18c77e4dbe" /><br>
 
-#### Amazon Inspector
+**Amazon Inspector**
 - Enabled in Dev & Prod.
 - Delegated admin assigned:
 ```markdown
@@ -378,7 +379,7 @@ Apply terraform for both Dev and Prod.
 <br><img width="565" height="164" alt="image" src="https://github.com/user-attachments/assets/576e738b-646c-4d85-9862-8dd6e6a9c4e1" /><br>
 
 ### Step 2: IAM Access Analyzer (Org-level + Local)
-##### Purpose: Detects unintended access, public buckets, or cross-account permissions.
+**Purpose:** Detects unintended access, public buckets, or cross-account permissions.
 
 #### Actions Taken:
 Task  | 	Description
@@ -421,7 +422,7 @@ After `terraform init` use `terraform apply` for each account, security, dev, pr
 - Deployed local analyzers in Dev, Prod, and Shared
 
 ### Step 3: Deploy IAM Identity Center (SSO)
-#### Goal: Enable secure, centralized, role-based access without legacy IAM use
+**Goal:** Enable secure, centralized, role-based access without legacy IAM use
 
 First, we need to enable SSO using console in us-east-1 region.
 
@@ -485,7 +486,7 @@ Applied necessary key policies to allow CloudTrail and cross-account access
 
 ### Step 2: Custom AWS Config Rule (EBS Encryption Checker)
 
-#### Goal: Detect unencrypted EBS volumes across Dev/Prod/Security accounts.
+**Goal:** Detect unencrypted EBS volumes across Dev/Prod/Security accounts.
 
 #### Create a Lambda function to perform checks for unencrypted EBS volumes. 
 
@@ -584,7 +585,7 @@ We add permissions to create a resource policy.
 
 <br><img width="814" height="88" alt="image" src="https://github.com/user-attachments/assets/b2f8d24a-d92d-48c0-926a-088f34556f92" /><br>
 
-ebs-volume-encryption-required
+**ebs-volume-encryption-required**
 - Custom AWS Config Rule (via your Lambda)
 - Checks each individual EBS volume to ensure it's encrypted
 - Evaluates compliance on a resource-by-resource basis (not just global settings)
@@ -606,3 +607,97 @@ In this final phase, we enhanced the detection and compliance capabilities of th
 - **Simulated findings** are safe, non-malicious, and ideal for testing alert pipelines.
 
 **Run in Security Account (Delegated Admin):**
+```bash
+# Step 1: Get Detector ID
+aws guardduty list-detectors --region us-east-1
+
+# Step 2: Simulate findings
+aws guardduty create-sample-findings --region us-east-1 --detector-id 12cbf07370bd6a26850b38bf88c08b62 --finding-types UnauthorizedAccess:EC2/SSHBruteForce
+aws guardduty create-sample-findings --region us-east-1 --detector-id 12cbf07370bd6a26850b38bf88c08b62 --finding-types Recon:EC2/PortProbeUnprotectedPort
+aws guardduty create-sample-findings --region us-east-1 --detector-id 12cbf07370bd6a26850b38bf88c08b62 --finding-types Trojan:EC2/BlackholeTraffic
+```
+Finding Types:
+
+| Type                       | Description                          |
+| -------------------------- | ------------------------------------ |
+| `SSHBruteForce`            | Attempted SSH brute-force attack     |
+| `PortProbeUnprotectedPort` | Port scanning activity               |
+| `BlackholeTraffic`         | EC2 sending traffic to known bad IPs |
+
+<br><img width="783" height="458" alt="image" src="https://github.com/user-attachments/assets/4955b683-00df-4d60-9e98-1473980ddb69" /><br>
+
+<br><img width="786" height="291" alt="image" src="https://github.com/user-attachments/assets/1e7241c5-2212-49b2-88f3-ee2f0bcdbad0" /><br>
+
+- Ran SSHBruteForce simulation from Dev account
+
+<br><img width="851" height="128" alt="image" src="https://github.com/user-attachments/assets/1d718835-044b-477c-9994-13e7e37df86f" /><br>
+
+<br><img width="854" height="319" alt="image" src="https://github.com/user-attachments/assets/0c1ab6c7-a07d-47ce-93ed-dc74a9ebeb1e" /><br>
+
+- Ran BlackholeTraffic simulation from Prod account
+
+<br><img width="864" height="160" alt="image" src="https://github.com/user-attachments/assets/095b39ea-b8dd-48ea-8eed-7195c9ebd948" /><br>
+
+<br><img width="879" height="303" alt="image" src="https://github.com/user-attachments/assets/b7dd45d3-81e0-475b-8e39-8d762e7e59ec" /><br>
+
+- Verified centralized aggregation in Security Hub in Security account
+
+<br><img width="930" height="451" alt="image" src="https://github.com/user-attachments/assets/2b3faafd-27a9-47aa-9ee4-153c22dac4a0" /><br>
+
+### Step 2: Enable Amazon Macie for PHI Detection
+**Goal:** Demonstrate automated PHI discovery in S3 using Macie.
+
+**Steps:**
+- Created S3 bucket and uploaded a sample PHI object (e.g., john ssn 123-45-6789) [john-doe-medical-record.txt](https://github.com/k4sth4/hipaa-landing-zone/blob/main/terraform/john-doe-medical-record.txt)
+
+<br><img width="975" height="204" alt="image" src="https://github.com/user-attachments/assets/9196ae76-4a82-45fa-846e-b0d3914c50bd" /><br>
+
+<br><img width="975" height="339" alt="image" src="https://github.com/user-attachments/assets/97cf85c8-5e87-4f9d-a7c2-c9b3ea937798" /><br>
+
+- Enabled Macie in Security account
+- Created a one-time classification job with default settings
+
+<br><img width="975" height="391" alt="image" src="https://github.com/user-attachments/assets/9091e773-73a9-4d66-a5ca-478ca531bf96" /><br>
+
+- Let the scan run to detect sensitive data
+- Review Findings: Macie successfully flagged sensitive personal and medical data
+
+<br><img width="929" height="239" alt="image" src="https://github.com/user-attachments/assets/b72803a1-7b41-437d-9071-f31b03848cd2" /><br>
+
+<br><img width="653" height="494" alt="image" src="https://github.com/user-attachments/assets/501f65d1-a86e-478a-981a-649eaa6c4a1b" /><br>
+
+> Macie findings confirmed detection of PHI elements including names, SSNs, and medical terms. This demonstrates compliance automation aligned with HIPAA privacy standards.
+
+Phase 6 elevated this project to production-readiness by simulating threat detection, validating centralized visibility, and using AI-powered scanning for regulated PHI data — critical for HIPAA compliance.
+
+---
+
+## Final Thoughts
+
+This concludes the step-by-step build of the HIPAA-Compliant AWS Landing Zone using Terraform and security best practices.
+
+Over six structured phases, we implemented:
+
+- Multi-account AWS Organization with least-privilege access
+- Centralized logging (CloudTrail, Config)
+- Continuous compliance checks via AWS Config Rules
+- Centralized GuardDuty and Security Hub triage
+- Advanced compliance enhancements like PHI detection with Macie
+
+All infrastructure was created using a hybrid Terraform approach for automation and maintainability.
+
+---
+
+## Cost Management Note
+
+To avoid unnecessary billing charges, the entire AWS infrastructure used in this project has been decommissioned after successful build and validation.
+
+Resources were spun up only for the duration of testing and demonstration.
+
+---
+
+➡️ **Next Steps: Test & Validation**
+
+To ensure all services are working as expected and compliant with HIPAA safeguards, please refer to the [Tests.md](https://github.com/k4sth4/hipaa-landing-zone/blob/main/test-results/Tests.md), which contains detailed verification steps and results for each phase.
+
+---
