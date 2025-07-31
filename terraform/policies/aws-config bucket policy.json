@@ -1,0 +1,177 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AWSConfigBucketPermissionsCheck",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "292725948066"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketExistenceCheck",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "292725948066"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketDelivery",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066/AWSLogs/292725948066/Config/*",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "292725948066",
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+         {
+            "Sid": "AWSConfigBucketPermissionsCheckDev",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "088044431771"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketExistenceCheckDev",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "088044431771"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketDeliveryDev",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066/AWSLogs/088044431771/Config/*",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "088044431771",
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+         {
+            "Sid": "AWSConfigBucketPermissionsCheckProd",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "674845782471"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketExistenceCheckProd",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "674845782471"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketDeliveryProd",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066/AWSLogs/674845782471/Config/*",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "674845782471",
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+         {
+            "Sid": "AWSConfigBucketPermissionsCheckShared",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "749717458225"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketExistenceCheckShared",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "749717458225"
+                }
+            }
+        },
+        {
+            "Sid": "AWSConfigBucketDeliveryShared",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::aws-config-security-292725948066/AWSLogs/749717458225/Config/*",
+            "Condition": {
+                "StringEquals": {
+                    "AWS:SourceAccount": "749717458225",
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        }
+    ]
+}
