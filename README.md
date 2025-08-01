@@ -52,23 +52,6 @@ Enterprises managing Protected Health Information (PHI) face strict compliance r
 
 ---
 
-## 🗂 Repository Structure
-
-```
-hipaa-landing-zone/
-├── terraform/               # Terraform modules and environments
-│   ├── modules/
-│   ├── environments/
-├── docs/
-│   ├── Build_Guide.md       # Step-by-step build process
-│   ├── Tests.md             # All HIPAA-aligned tests performed
-│   ├── Troubleshooting.md   # Known issues & fixes
-├── LICENSE
-└── README.md
-```
-
----
-
 ## 🚀 Build Instructions
 
 The build was divided into **6 Phases**, documented in [`docs/Build_Guide.md`](https://github.com/k4sth4/hipaa-landing-zone/blob/main/docs/Build_Guide.md):
@@ -133,4 +116,5 @@ All known issues encountered and resolved during the build are documented in [`d
 ## 📄 License
 
 Licensed under the [MIT License](https://github.com/k4sth4/hipaa-landing-zone/blob/main/LICENSE)
+
 
