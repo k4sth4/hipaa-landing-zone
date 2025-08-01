@@ -132,8 +132,5 @@ All known issues encountered and resolved during the build are documented in [`d
 
 ## 📄 License
 
-Licensed under the [MIT License](LICENSE)
+Licensed under the [MIT License](https://github.com/k4sth4/hipaa-landing-zone/blob/main/LICENSE)
 
----
-
-*Last Updated: August 01, 2025*
