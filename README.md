@@ -83,7 +83,7 @@ The build was divided into **6 Phases**, documented in [`docs/Build_Guide.md`](h
 
 ## ✅ HIPAA Compliance Tests
 
-We validated the architecture against HIPAA safeguards via 20+ manual and automated tests (see [`docs/Tests.md`](https://github.com/k4sth4/hipaa-landing-zone/blob/main/test-results/Tests.md)), including:
+We validated the architecture against HIPAA safeguards via 20+ manual and automated tests (see [`test-results/Tests.md`](https://github.com/k4sth4/hipaa-landing-zone/blob/main/test-results/Tests.md)), including:
 - S3 public access detection (Access Analyzer)
 - Unencrypted EBS volumes (custom AWS Config rule)
 - PHI string detection via Macie
