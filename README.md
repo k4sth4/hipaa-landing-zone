@@ -66,7 +66,7 @@ The build was divided into **6 Phases**, documented in [`docs/Build_Guide.md`](h
 
 ## ✅ HIPAA Compliance Tests
 
-We validated the architecture against HIPAA safeguards via 20+ manual and automated tests (see [`test-results/Tests.md`](https://github.com/k4sth4/hipaa-landing-zone/blob/main/test-results/Tests.md)), including:
+We validated the architecture against HIPAA safeguards via 10+ manual and automated tests (see [`test-results/Tests.md`](https://github.com/k4sth4/hipaa-landing-zone/blob/main/test-results/Tests.md)), including:
 - S3 public access detection (Access Analyzer)
 - Unencrypted EBS volumes (custom AWS Config rule)
 - PHI string detection via Macie
@@ -80,8 +80,8 @@ We validated the architecture against HIPAA safeguards via 20+ manual and automa
 
 All known issues encountered and resolved during the build are documented in [`docs/Troubleshooting.md`](https://github.com/k4sth4/hipaa-landing-zone/blob/main/docs/Troubleshooting.md), including:
 - Terraform errors
-- SSM connection problems
-- CloudTrail log deletion despite Object Lock
+- Bucket Policy errors
+- SCPs restrictions
 
 ---
 
@@ -116,5 +116,6 @@ All known issues encountered and resolved during the build are documented in [`d
 ## 📄 License
 
 Licensed under the [MIT License](https://github.com/k4sth4/hipaa-landing-zone/blob/main/LICENSE)
+
 
 
