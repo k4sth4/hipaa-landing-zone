@@ -52,6 +52,14 @@ Enterprises managing Protected Health Information (PHI) face strict compliance r
 
 ---
 
+## 🗺️ Architecture Diagram
+
+The diagram below illustrates the HIPAA-compliant AWS Landing Zone architecture, including account separation, centralized logging, threat detection, compliance automation, and network layout.
+
+![HIPAA Landing Zone Architecture](https://github.com/k4sth4/hipaa-landing-zone/blob/main/architecture/hipaa-landing-zone-architecture..png)
+
+---
+
 ## 🚀 Build Instructions
 
 The build was divided into **6 Phases**, documented in [`docs/Build_Guide.md`](https://github.com/k4sth4/hipaa-landing-zone/blob/main/docs/Build_Guide.md):
@@ -116,6 +124,7 @@ All known issues encountered and resolved during the build are documented in [`d
 ## 📄 License
 
 Licensed under the [MIT License](https://github.com/k4sth4/hipaa-landing-zone/blob/main/LICENSE)
+
 
 
 
