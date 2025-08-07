@@ -2,6 +2,9 @@
 
 The diagram below illustrates a multi-account HIPAA-compliant AWS Landing Zone designed for secure, scalable, and cost-efficient operations across development and production environments.
 
+<br><img width="1180" height="800" alt="image" src="https://github.com/user-attachments/assets/c8744d76-4d68-4810-83ee-97cd6bcdd65e" /><br>
+
+
 ## Legend Box :
 
 🔴 Security Account
