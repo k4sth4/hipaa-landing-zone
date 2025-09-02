@@ -20,7 +20,7 @@ Establish a secure AWS Organization with workload isolation, Terraform-ready IAM
   - `Dev`
   - `Prod`
 
-<br><img width="673" height="283" alt="image" src="https://github.com/user-attachments/assets/50caf2f0-82fc-47dc-a9bb-dafd8ea9a06f" /><br>
+<br><img width="975" height="410" alt="OnPaste 20250902-131652" src="https://github.com/user-attachments/assets/9c5db510-8f89-4089-b1bf-77f53f9d7fbd" /><br>
 
 ### 2. Member Account Creation
 
@@ -31,7 +31,7 @@ Establish a secure AWS Organization with workload isolation, Terraform-ready IAM
 | Dev          | 088044431771   | Workloads       |
 | Prod         | 674845782471   | Workloads       |
 
-<br><img width="666" height="424" alt="image" src="https://github.com/user-attachments/assets/aa16d233-6ab8-48d1-aa49-0151be7f44aa" /><br>
+<br><img width="975" height="621" alt="OnPaste 20250902-131903" src="https://github.com/user-attachments/assets/38e7d323-1073-4d07-8276-efd60d52d4c2" /><br>
 
 Root credentials configured and stored securely (not managed by Terraform).
 
@@ -701,3 +701,4 @@ Resources were spun up only for the duration of testing and demonstration.
 To ensure all services are working as expected and compliant with HIPAA safeguards, please refer to the [Tests.md](https://github.com/k4sth4/hipaa-landing-zone/blob/main/test-results/Tests.md), which contains detailed verification steps and results for each phase.
 
 ---
+
