@@ -58,7 +58,7 @@ The diagram below illustrates the HIPAA-compliant AWS Landing Zone architecture,
 
 ![HIPAA Landing Zone Architecture](https://github.com/k4sth4/hipaa-landing-zone/blob/main/architecture/hipaa-landing-zone-architecture..png)
 
-[Architecture detail](https://github.com/k4sth4/hipaa-landing-zone/blob/main/architecture/readme.md)
+[Architecture details](https://github.com/k4sth4/hipaa-landing-zone/blob/main/architecture/readme.md)
 
 ---
 
@@ -126,6 +126,7 @@ All known issues encountered and resolved during the build are documented in [`d
 ## 📄 License
 
 Licensed under the [MIT License](https://github.com/k4sth4/hipaa-landing-zone/blob/main/LICENSE)
+
 
 
 
